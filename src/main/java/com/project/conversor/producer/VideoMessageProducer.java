@@ -1,6 +1,7 @@
 package com.project.conversor.producer;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,20 +21,21 @@ public class VideoMessageProducer {
     @Value("${rabbitmq.routing-key}")
     private String routingKey;
 
-    //Cria um template do rabbit
+    //Construtor
     public VideoMessageProducer(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+        this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter()); // Configura o conversor JSON
     }
 
-    //Forma a mensagem e envia 
+    //Forma a mensagem e envia
     public void sendMessage(String email, String videoUrl, String format) {
         Map<String, String> message = new HashMap<>();
         message.put("email", email);
         message.put("videoUrl", videoUrl);
         message.put("format", format);
 
+        // Envia a mensagem convertida para JSON
         rabbitTemplate.convertAndSend(exchange, routingKey, message);
-        //Se funcionar printa no console a mensagem enviada
         System.out.println("📤 Mensagem enviada para RabbitMQ: " + message);
     }
 }
